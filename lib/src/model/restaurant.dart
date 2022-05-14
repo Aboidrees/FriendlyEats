@@ -15,8 +15,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import './values.dart';
+import 'package:friendlyeats/src/model/values.dart';
 
 typedef RestaurantPressedCallback = void Function(String restaurantId);
 
@@ -33,6 +32,16 @@ class Restaurant {
   final String photo;
   final DocumentReference reference;
 
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'category': category,
+        'city': city,
+        'numRatings': numRatings,
+        'price': price,
+        'photo': photo,
+        'avgRating': avgRating,
+      };
+
   Restaurant._({this.name, this.category, this.city, this.price, this.photo})
       : id = null,
         numRatings = 0,
@@ -42,13 +51,13 @@ class Restaurant {
   Restaurant.fromSnapshot(DocumentSnapshot snapshot)
       : assert(snapshot != null),
         id = snapshot.id,
-        name = snapshot.data()['name'],
-        category = snapshot.data()['category'],
-        city = snapshot.data()['city'],
-        avgRating = snapshot.data()['avgRating'].toDouble(),
-        numRatings = snapshot.data()['numRatings'],
-        price = snapshot.data()['price'],
-        photo = snapshot.data()['photo'],
+        name = (snapshot.data() as dynamic)['name'],
+        category = (snapshot.data() as dynamic)['category'],
+        city = (snapshot.data() as dynamic)['city'],
+        avgRating = (snapshot.data() as dynamic)['avgRating'].toDouble(),
+        numRatings = (snapshot.data() as dynamic)['numRatings'],
+        price = (snapshot.data() as dynamic)['price'],
+        photo = (snapshot.data() as dynamic)['photo'],
         reference = snapshot.reference;
 
   factory Restaurant.random() {

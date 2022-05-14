@@ -21,13 +21,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sliver_fab/sliver_fab.dart';
 
-import 'widgets/empty_list.dart';
 import 'model/data.dart' as data;
 import 'model/restaurant.dart';
 import 'model/review.dart';
 import 'widgets/app_bar.dart';
-import 'widgets/review.dart';
 import 'widgets/dialogs/review_create.dart';
+import 'widgets/empty_list.dart';
+import 'widgets/review.dart';
 
 class RestaurantPage extends StatefulWidget {
   static const route = '/restaurant';
@@ -39,43 +39,41 @@ class RestaurantPage extends StatefulWidget {
         super(key: key);
 
   @override
-  _RestaurantPageState createState() =>
-      _RestaurantPageState(restaurantId: _restaurantId);
+  _RestaurantPageState createState() => _RestaurantPageState(restaurantId: _restaurantId);
 }
 
 class _RestaurantPageState extends State<RestaurantPage> {
   _RestaurantPageState({@required String restaurantId}) {
-    FirebaseAuth.instance
-        .signInAnonymously()
-        .then((UserCredential userCredential) {
-      data.getRestaurant(restaurantId).then((Restaurant restaurant) {
-        _currentReviewSubscription?.cancel();
-        setState(() {
-          if (userCredential.user.displayName == null ||
-              userCredential.user.displayName.isEmpty) {
-            _userName = 'Anonymous (${kIsWeb ? "Web" : "Mobile"})';
-          } else {
-            _userName = userCredential.user.displayName;
-          }
-          _restaurant = restaurant;
-          _userId = userCredential.user.uid;
+    FirebaseAuth.instance.signInAnonymously().then(
+      (UserCredential userCredential) {
+        data.getRestaurant(restaurantId).then((Restaurant restaurant) {
+          _currentReviewSubscription?.cancel();
+          setState(() {
+            if (userCredential.user.displayName == null || userCredential.user.displayName.isEmpty) {
+              _userName = 'Anonymous (${kIsWeb ? "Web" : "Mobile"})';
+            } else {
+              _userName = userCredential.user.displayName;
+            }
+            _restaurant = restaurant;
+            _userId = userCredential.user.uid;
 
-          // Initialize the reviews snapshot...
-          _currentReviewSubscription = _restaurant.reference
-              .collection('ratings')
-              .orderBy('timestamp', descending: true)
-              .snapshots()
-              .listen((QuerySnapshot reviewSnap) {
-            setState(() {
-              _isLoading = false;
-              _reviews = reviewSnap.docs.map((DocumentSnapshot doc) {
-                return Review.fromSnapshot(doc);
-              }).toList();
+            // Initialize the reviews snapshot...
+            _currentReviewSubscription = _restaurant.reference
+                .collection('ratings')
+                .orderBy('timestamp', descending: true)
+                .snapshots()
+                .listen((QuerySnapshot reviewSnap) {
+              setState(() {
+                _isLoading = false;
+                _reviews = reviewSnap.docs.map((DocumentSnapshot doc) {
+                  return Review.fromSnapshot(doc);
+                }).toList();
+              });
             });
           });
         });
-      });
-    });
+      },
+    );
   }
 
   @override
@@ -147,17 +145,14 @@ class _RestaurantPageState extends State<RestaurantPage> {
                       ? SliverPadding(
                           padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
                           sliver: SliverList(
-                            delegate: SliverChildListDelegate(_reviews
-                                .map((Review review) =>
-                                    RestaurantReview(review: review))
-                                .toList()),
+                            delegate: SliverChildListDelegate(_reviews.map((Review review) => RestaurantReview(review: review)).toList()),
                           ),
                         )
                       : SliverFillRemaining(
                           hasScrollBody: false,
                           child: EmptyListView(
-                            child: Text('${_restaurant.name} has no reviews.'),
                             onPressed: _onAddRandomReviewsPressed,
+                            child: Text('${_restaurant.name} has no reviews.'),
                           ),
                         ),
                 ],

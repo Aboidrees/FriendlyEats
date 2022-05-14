@@ -18,40 +18,66 @@ import './filter.dart';
 import './restaurant.dart';
 import './review.dart';
 
-// This is the file that Codelab users will primarily work on.
+//* Reference for the restaurants collection
+final resRef = FirebaseFirestore.instance.collection('restaurants');
+
+//* This function convert Restaurant Snapshot to Restaurant Object
+Restaurant toRestaurant(DocumentSnapshot doc) => Restaurant.fromSnapshot(doc);
 
 Future<void> addRestaurant(Restaurant restaurant) {
-  // TODO: Complete the "Add restaurants to Firestore" step.
-  return Future.value();
+  return resRef.add(restaurant.toMap());
 }
 
 Stream<QuerySnapshot> loadAllRestaurants() {
-  // TODO: Complete the "Display data from Cloud Firestore" step.
-  return Stream<QuerySnapshot>.value(null);
+  return resRef.orderBy('avgRating', descending: true).limit(50).snapshots();
 }
 
 List<Restaurant> getRestaurantsFromQuery(QuerySnapshot snapshot) {
-  // TODO: Complete the "Display data from Cloud Firestore" step.
-  return [];
+  return snapshot.docs.map(toRestaurant).toList();
 }
 
 Future<Restaurant> getRestaurant(String restaurantId) {
-  // TODO: Complete the "Get data" step.
-  return Future.value(null);
+  return resRef.doc(restaurantId).get().then(toRestaurant);
 }
 
 Future<void> addReview({String restaurantId, Review review}) {
-  // TODO: Complete the "Write data in a transaction" step.
-  return Future.value();
+  final oneResRef = resRef.doc(restaurantId);
+  final reviewsRef = oneResRef.collection('reviews').doc();
+
+  return FirebaseFirestore.instance.runTransaction(
+    (Transaction transaction) => transaction.get(oneResRef).then(toRestaurant).then(
+      (Restaurant fresh) {
+        final numRatings = fresh.numRatings + 1;
+        final avgRating = ((fresh.numRatings * fresh.avgRating) + review.rating) / numRatings;
+        transaction.update(oneResRef, {'numRatings': numRatings, 'avgRating': avgRating});
+        transaction.set(reviewsRef, review.toMap());
+      },
+    ),
+  );
 }
 
 Stream<QuerySnapshot> loadFilteredRestaurants(Filter filter) {
-  // TODO: Complete the "Sorting and filtering data" step.
-  return Stream<QuerySnapshot>.value(null);
+  Query collection = resRef;
+
+  // filters
+  //
+  if (filter.category != null) {
+    collection = collection.where('category', isEqualTo: filter.category);
+  }
+  //
+  if (filter.city != null) {
+    collection = collection.where('city', isEqualTo: filter.city);
+  }
+  //
+  if (filter.price != null) {
+    collection = collection.where('price', isEqualTo: filter.price);
+  }
+  //
+  return collection.orderBy(filter.sort ?? 'avgRating', descending: true).limit(50).snapshots();
 }
 
-void addRestaurantsBatch(List<Restaurant> restaurants) {
-  restaurants.forEach((Restaurant restaurant) {
-    addRestaurant(restaurant);
-  });
-}
+void addRestaurantsBatch(List<Restaurant> restaurants) => restaurants.forEach(addRestaurant);
+//? this commented code is done better in the previous line
+// {
+// restaurants.forEach((Restaurant restaurant) => addRestaurant(restaurant));
+// }

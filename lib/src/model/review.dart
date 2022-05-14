@@ -29,14 +29,22 @@ class Review {
 
   final DocumentReference reference;
 
+  Map<String, dynamic> toMap() => {
+        'rating': rating,
+        'text': text,
+        'userName': userName,
+        'timestamp': timestamp ?? FieldValue.serverTimestamp(),
+        'userId': userId,
+      };
+
   Review.fromSnapshot(DocumentSnapshot snapshot)
       : assert(snapshot != null),
         id = snapshot.id,
-        rating = snapshot.data()['rating'].toDouble(),
-        text = snapshot.data()['text'],
-        userName = snapshot.data()['userName'],
-        userId = snapshot.data()['userId'],
-        timestamp = snapshot.data()['timestamp'],
+        rating = (snapshot.data() as dynamic)['rating'].toDouble(),
+        text = (snapshot.data() as dynamic)['text'],
+        userName = (snapshot.data() as dynamic)['userName'],
+        userId = (snapshot.data() as dynamic)['userId'],
+        timestamp = (snapshot.data() as dynamic)['timestamp'],
         reference = snapshot.reference;
 
   Review.fromUserInput({this.rating, this.text, this.userName, this.userId})
@@ -47,10 +55,6 @@ class Review {
   factory Review.random({String userName, String userId}) {
     final rating = Random().nextInt(4) + 1;
     final review = getRandomReviewText(rating);
-    return Review.fromUserInput(
-        rating: rating.toDouble(),
-        text: review,
-        userName: userName,
-        userId: userId);
+    return Review.fromUserInput(rating: rating.toDouble(), text: review, userName: userName, userId: userId);
   }
 }

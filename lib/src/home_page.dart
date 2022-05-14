@@ -19,14 +19,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'restaurant_page.dart';
 import 'model/data.dart' as data;
 import 'model/filter.dart';
 import 'model/restaurant.dart';
+import 'restaurant_page.dart';
+import 'widgets/dialogs/filter_select.dart';
 import 'widgets/empty_list.dart';
 import 'widgets/filter_bar.dart';
 import 'widgets/grid.dart';
-import 'widgets/dialogs/filter_select.dart';
 
 class HomePage extends StatefulWidget {
   static const route = '/';
@@ -39,11 +39,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   _HomePageState() {
-    FirebaseAuth.instance
-        .signInAnonymously()
-        .then((UserCredential userCredential) {
-      _currentSubscription =
-          data.loadAllRestaurants().listen(_updateRestaurants);
+    FirebaseAuth.instance.signInAnonymously().then((UserCredential userCredential) {
+      _currentSubscription = data.loadAllRestaurants().listen(_updateRestaurants);
     });
   }
 
@@ -83,11 +80,9 @@ class _HomePageState extends State<HomePage> {
         _isLoading = true;
         _filter = filter;
         if (filter.isDefault) {
-          _currentSubscription =
-              data.loadAllRestaurants().listen(_updateRestaurants);
+          _currentSubscription = data.loadAllRestaurants().listen(_updateRestaurants);
         } else {
-          _currentSubscription =
-              data.loadFilteredRestaurants(filter).listen(_updateRestaurants);
+          _currentSubscription = data.loadFilteredRestaurants(filter).listen(_updateRestaurants);
         }
       });
     }
@@ -120,12 +115,11 @@ class _HomePageState extends State<HomePage> {
                       restaurants: _restaurants,
                       onRestaurantPressed: (id) {
                         // TODO: Add deep links on web
-                        Navigator.pushNamed(context, RestaurantPage.route,
-                            arguments: RestaurantPageArguments(id: id));
+                        Navigator.pushNamed(context, RestaurantPage.route, arguments: RestaurantPageArguments(id: id));
                       })
                   : EmptyListView(
-                      child: Text('FriendlyEats has no restaurants yet!'),
                       onPressed: _onAddRandomRestaurantsPressed,
+                      child: Text('FriendlyEats has no restaurants yet!'),
                     ),
         ),
       ),
